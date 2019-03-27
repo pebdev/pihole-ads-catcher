@@ -116,11 +116,15 @@ catcherYoutube () {
   touch $YOUTUBE_BLACKLIST
   
   # Extract dns request from the pihole logfiles
-  Y1A=`cat "$PIHOLE_LOGFILE" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [0-9.]*//' | sort -u`
-  Y1B=`cat "$PIHOLE_LOGFILE.1" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [0-9.]*//' | sort -u`
+  Y1A=`cat "$PIHOLE_LOGFILE" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
+  Y1B=`cat "$PIHOLE_LOGFILE.1" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
+  Y2="$Y1A\n$Y1B"
+
+  # Remove whitelist addresses
+  Y2=`echo $Y2 | sed '/redirector.googlevideo.com/d'`
 
   # Update blacklist file
-  updateBlacklistFile "$YOUTUBE_BLACKLIST" "$Y1A\n$Y1B"
+  updateBlacklistFile "$YOUTUBE_BLACKLIST" "$Y2"
 
   # Check treatments result
   isPiholeUpdateNeeded "$YOUTUBE_BLACKLIST"

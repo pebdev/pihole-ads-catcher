@@ -22,7 +22,7 @@ Add cron task by editing **/etc/crontab** file :
 
 
 ### Known issues ###
-- bad filtering with some googlevide.com addresses
+- no issues
 
 
 ### Link ###
