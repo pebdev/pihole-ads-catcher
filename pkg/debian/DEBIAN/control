@@ -1,0 +1,10 @@
+Package: ads-catcher
+Version: 1.0.0
+Section: web
+Priority: optional
+Architecture: all
+Maintainer: PEB <pebdev@lavache.com>
+Description: ADS Catcher for Pi-Hole
+ This tool scans pi-hole logfiles to find address of
+ ads servers. It updates pi-hole blacklist automatically
+ after a scan.

@@ -5,22 +5,22 @@
 ##############################################################################
 # Copyright (C) 2019 
 # This file is copyright under the latest version of the EUPL.
-# Please see LICENSE file for your rights under this license.
+# Please see https://joinup.ec.europa.eu/collection/eupl for your rights 
+# under this license.
 ##############################################################################
 
 # ads-catcher internal informations
 ADSC_VERSION="v1.1.0"
-ADSC_INSTALL_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 # Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
-ADSC_SETTINGS=$ADSC_INSTALL_PATH/settings.txt
+ADSC_SETTINGS=/etc/ads-catcher.cfg
 PIHOLE_LOGFILE=/var/log/pihole.log
 PIHOLE_BLACKLIST_FILE=/etc/pihole/blacklist.txt
 
 # Blacklist files
-ADSC_BLACKLIST_FOLDER=$ADSC_INSTALL_PATH/blacklist
-ADSC_HISTORY_FOLDER=$ADSC_INSTALL_PATH/history/
+ADSC_BLACKLIST_FOLDER=/usr/share/ads-catcher/blacklist
+ADSC_HISTORY_FOLDER=/usr/share/ads-catcher/history/
 YOUTUBE_BLACKLIST=$ADSC_BLACKLIST_FOLDER/youtube-blacklist.txt
 
 

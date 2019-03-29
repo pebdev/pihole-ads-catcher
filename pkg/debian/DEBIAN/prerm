@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+APP_NAME="ads-catcher"
+
+if [ \( "$1" = "upgrade" -o "$1" = "remove" \) -a -L /usr/share/doc/$APP_NAME ]; then
+  rm -f /usr/share/doc/$APP_NAME
+  rm -f /usr/share/man/man.1/$APP_NAME.1.gz
+fi
+
+if [ \( "$1" = "upgrade" -o "$1" = "remove" \) ]; then
+  rm -rf /usr/share/ads-catcher
+
+  echo "removing cron task..."
+  sed -i '/ads-catcher/d' /etc/crontab
+fi
+
