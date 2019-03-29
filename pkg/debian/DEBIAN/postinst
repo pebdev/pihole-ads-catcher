@@ -6,5 +6,5 @@ echo "Removing previous crontab entry..."
 sed -i '/ads-catcher/d' /etc/crontab
 
 echo "Adding crontab entry..."
-echo "*/2 * * * * root /usr/bin/ads-catcher > /var/log/ads-catcher.log 2>&1" >> /etc/crontab
+echo "*/10 * * * * root /usr/bin/ads-catcher > /var/log/ads-catcher.log 2>&1" >> /etc/crontab
 
