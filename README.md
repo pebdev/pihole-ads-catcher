@@ -4,14 +4,13 @@
 	
 ### What is it ? ###
 
-This script scan pi-hole logfiles to find youtube address of ads servers. It updates pi-hole blacklist automatically after a scan.
+This tool scans pi-hole logfiles to find youtube address of ads servers. It updates pi-hole blacklist automatically after a scan.
 
 
 ### How it works ? ###
 
-To work, it's needed to add periodic call (cron task for example) to this **ads-catcher.sh** script.
-
-Script will do these actions :
+This tool is called (by cron) every 10 minutes to check pi-hole logfiles.
+It does following actions :
 
 - scan pihole logfiles
 - extract addresses of ads servers
@@ -24,23 +23,31 @@ Script will do these actions :
 
 ### Installation ###
 
-Install **ads-catcher** files into the wanted directory.    
-Example :
+Debian package is provided, you just need to download it ([release page](https://github.com/pebdev/pihole/releases)), and to launch dpkg :
 
-	/opt
-	 ├── tools
-	     ├── ads-catcher
-			  ├── ads-catcher.sh
-			  ├── settings.txt
+	sudo dpkg -i <deb_file>
+
+Content of the package :
+
+	 /
+	 ├── /etc/ads-catcher.cfg
+	 ├── /usr/bin/ads-catcher
+	 ├── /usr/share/doc/ads-catcher/copyright
+	 ├── /usr/share/man/man1/ads-catcher.1.gz
+
+Note : you can see content with this command **dpkg -c < deb_file >**
 
 
-Add cron task by editing **/etc/crontab** file :
+### Uninstall ###
 
-	*/10 * * * * root /opt/tools/ads-catcher/ads-catcher.sh > /tmp/ads-catcher.log 2>&1
+To uninstall this package, just lanch this command :
 
-Note : with this line, script will be launched every 10 minutes.
+	sudo dpkg -r ads-catcher
+
 
 ### Configuration ###
+
+Configuration file location : **/etc/ads-catcher.cfg**
 
 	# If enabled, ads-catcher creates independent file to add blacklisted
 	# addresses for eache services (youtube, etc.) and add link of these
@@ -70,17 +77,12 @@ Note : with this line, script will be launched every 10 minutes.
 
 If you want to check actions of the script you can access to the logfile :
 
-	cat /var/log/pihole.log
+	cat /var/log/ads-catcher.log
 
 
 ### Known issues ###
 
 - no issues
-
-
-### Todo ###
-
-- create deb package for an easy installation
 
 
 ### Link ###
@@ -90,11 +92,11 @@ Discussion on pi-hole forum : [link](https://discourse.pi-hole.net/t/how-do-i-bl
 
 
 ## Changelog ##
-v1.1.0   
-- [FIXED] now user can install script anywhere   
+**v1.1.0** *[md5:8ce40ab7ec66ff37406317cf2676d9eb]*   
 - [ADDED] option to write (1) ads-catcher blacklist files or (2) blocked addresses into the pi-hole balcklist (default: (2))  
 - [ADDED] option to enable/disable backup files (default : disabled)   
-- [ADDED] configuration file
+- [ADDED] configuration file  
+- [ADDED] deb package for easy install
 
-v1.0.0   
+**v1.0.0**   
 - initial revision
