@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################################
-# PEB
+# PEB <pebdev@lavache.com>
 # 2019.03.24
 ##############################################################################
 # Copyright (C) 2019 
@@ -8,17 +8,32 @@
 # Please see LICENSE file for your rights under this license.
 ##############################################################################
 
-ADSC_INSTALL_PATH="/opt/tools/ads-catcher/"
+# ads-catcher internal informations
+ADSC_VERSION="v1.1.0"
+ADSC_INSTALL_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-# Log and temporary files
+# Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
+ADSC_SETTINGS=$ADSC_INSTALL_PATH/settings.txt
 PIHOLE_LOGFILE=/var/log/pihole.log
 PIHOLE_BLACKLIST_FILE=/etc/pihole/blacklist.txt
 
 # Blacklist files
-ADSC_BLACKLIST_FOLDER=$ADSC_INSTALL_PATH/blacklist/
+ADSC_BLACKLIST_FOLDER=$ADSC_INSTALL_PATH/blacklist
 ADSC_HISTORY_FOLDER=$ADSC_INSTALL_PATH/history/
 YOUTUBE_BLACKLIST=$ADSC_BLACKLIST_FOLDER/youtube-blacklist.txt
+
+
+##############################################################################
+# @brief : function to read setting from configruation file
+# @param $1 : configuration name to read
+# @return value of the setting
+##############################################################################
+readSetting () {
+
+  # Read value of the wanted seeting
+  echo "`cat $ADSC_SETTINGS | grep $1 | tr -d ' ' | cut -d= -f2`"
+}
 
 
 ##############################################################################
@@ -32,10 +47,32 @@ addBlacklistFilesToPihole () {
   # List of ads-catcher files
   ADSC_BLACKLIST_FILES="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
 
-  # Save result into the blacklsit file
+  # Save result into the blacklist file
   echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_FILES" | awk 'NF' | sort -u > $PIHOLE_BLACKLIST_FILE
 }
 
+
+##############################################################################
+# @brief : function to add blacklisted addresses directly inside the pi-hole 
+#          blacklist file
+##############################################################################
+addBlacklistAddressesToPihole () {
+ 
+  # Remove ads-catcher blacklist files from pi-hole blacklist
+  sed -i '/ads-catcher\//d' $PIHOLE_BLACKLIST_FILE
+
+  # Content of the pihole blacklist file
+  PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
+
+  # ads-catcher file list
+  ADSC_BLACKLIST_FILELIST="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
+
+  # Content of the ads-catcher blacklist file
+  ADSC_BLACKLIST_CONTENT="`cat $ADSC_BLACKLIST_FILELIST | awk 'NF'`"
+
+  # Save result into the blacklist file
+  echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_CONTENT" | awk 'NF' | sort -u > $PIHOLE_BLACKLIST_FILE
+}
 
 ##############################################################################
 # @brief : function to know if we need to update pihole after calling a catcher
@@ -61,8 +98,10 @@ isPiholeUpdateNeeded () {
   NB_ENTRIES=`wc -l $BLACKLIST_FILE | cut -d\  -f1`
 
   # Just for history, do a backup of this file
-  BACKUP_NAME="$SERVICE_NAME-$NB_ENTRIES.txt"
-  cp $BLACKLIST_FILE $ADSC_HISTORY_FOLDER/$BACKUP_NAME
+  if [ $ADSC_CONF_BLACKLIST_BACKUP -eq 1 ]; then
+    BACKUP_NAME="$SERVICE_NAME-$NB_ENTRIES.txt"
+    cp $BLACKLIST_FILE $ADSC_HISTORY_FOLDER/$BACKUP_NAME
+  fi
 
   # Extract previous number of entries
   PREVIOUS_NB_ENTRIES=`cat $ADSC_TMPFILE | grep $SERVICE_NAME | cut -d= -f2`
@@ -136,6 +175,12 @@ catcherYoutube () {
 ##############################################################################
 ### MAIN ###
 ##############################################################################
+echo "ads-catcher - $ADSC_VERSION"
+
+# Settings
+ADSC_CONF_BLACKLIST_BACKUP=$(readSetting blacklist_backup)
+ADSC_CONF_BLACKLIST_SEPARATED_FILES=$(readSetting blacklist_seperated_files)
+
 # Create blacklist folder and tmp files to be sure
 touch $ADSC_TMPFILE
 mkdir -p $ADSC_BLACKLIST_FOLDER
@@ -147,8 +192,13 @@ RETVAL_YOUTUBE=$?
 
 if [ $RETVAL_YOUTUBE -eq 1 ]; then
   
-  # Refresh list of blacklist files
-  addBlacklistFilesToPihole
+  if [ $ADSC_CONF_BLACKLIST_SEPARATED_FILES -eq 1 ]; then
+    # Refresh list of blacklist files
+    addBlacklistFilesToPihole
+  else
+    # Case of not separated files of blacklisted addresses
+    addBlacklistAddressesToPihole
+  fi
 
   # Update pihole with new entries
   /usr/local/bin/pihole -g
