@@ -1,0 +1,6 @@
+
+Steps :
+- Think to update ads-catcher version
+- Think to udpate debian/DEBIAN/control version
+- Launch create-pkg.sh with good version
+

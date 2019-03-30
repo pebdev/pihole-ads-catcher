@@ -10,7 +10,7 @@
 ##############################################################################
 
 # ads-catcher internal informations
-ADSC_VERSION="v1.1.0"
+ADSC_VERSION="v1.1.1"
 
 # Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
@@ -125,11 +125,11 @@ isPiholeUpdateNeeded () {
 # @param $1 : blacklist file that contains list of addresses to block
 # @param $2 : list of addresses to add
 ##############################################################################
-updateBlacklistFile() {
+updateServiceBlacklistFile() {
 
   # Argument check
   if [ $# -lt 2 ]; then
-    echo "[updateBlacklistFile] ERROR, missing argument :"
+    echo "[updateServiceBlacklistFile] ERROR, missing argument :"
     return
   fi
 
@@ -142,6 +142,28 @@ updateBlacklistFile() {
 
   # Save result into the blacklist file
   echo "$Y1\n$Y2" | awk 'NF' | sort -u > $BLACKLIST_FILE
+}
+
+
+##############################################################################
+# @brief : function to remove whitelisted address from the blacklist file
+# @param $1 : blacklist file that contains list of addresses to block
+# @param $2 : whitelisted address
+##############################################################################
+whitelistFiltering () {
+
+  # Argument check
+  if [ $# -lt 2 ]; then
+    echo "[whitelistFiltering] ERROR, missing argument :"
+    return
+  fi
+
+  # Parameters
+  BLACKLIST_FILE=$1
+  Y1=$2
+
+  Y2=`cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | sort -u`
+  echo "$Y2" > $BLACKLIST_FILE
 }
 
 
@@ -159,11 +181,12 @@ catcherYoutube () {
   Y1B=`cat "$PIHOLE_LOGFILE.1" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
   Y2="$Y1A\n$Y1B"
 
-  # Remove whitelist addresses
-  Y2=`echo $Y2 | sed '/redirector.googlevideo.com/d'`
+  # Update service blacklist file
+  updateServiceBlacklistFile "$YOUTUBE_BLACKLIST" "$Y2"
 
-  # Update blacklist file
-  updateBlacklistFile "$YOUTUBE_BLACKLIST" "$Y2"
+  # Do a whitelist filtering
+  whitelistFiltering "$YOUTUBE_BLACKLIST" "redirector.googlevideo.com"
+  whitelistFiltering "$YOUTUBE_BLACKLIST" "manifest.googlevideo.com"
 
   # Check treatments result
   isPiholeUpdateNeeded "$YOUTUBE_BLACKLIST"
