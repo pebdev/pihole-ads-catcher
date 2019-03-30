@@ -48,7 +48,7 @@ addBlacklistFilesToPihole () {
   ADSC_BLACKLIST_FILES="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
 
   # Save result into the blacklist file
-  echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_FILES" | awk 'NF' | sort -u > $PIHOLE_BLACKLIST_FILE
+  echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_FILES" | awk 'NF' | tr -d ' ' | sort -u | uniq -u  > $PIHOLE_BLACKLIST_FILE
 }
 
 
@@ -68,10 +68,11 @@ addBlacklistAddressesToPihole () {
   ADSC_BLACKLIST_FILELIST="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
 
   # Content of the ads-catcher blacklist file
-  ADSC_BLACKLIST_CONTENT="`cat $ADSC_BLACKLIST_FILELIST | awk 'NF'`"
+  ADSC_BLACKLIST_CONTENT="`cat $ADSC_BLACKLIST_FILELIST`"
 
   # Save result into the blacklist file
-  echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_CONTENT" | awk 'NF' | sort -u > $PIHOLE_BLACKLIST_FILE
+  Y1=`echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_CONTENT" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
+  echo "$Y1" > $PIHOLE_BLACKLIST_FILE
 }
 
 ##############################################################################
@@ -109,12 +110,13 @@ isPiholeUpdateNeeded () {
   # Update pihole with new entries
   if [ "$NB_ENTRIES" != "$PREVIOUS_NB_ENTRIES" ]; then
     RETVAL=1
+
+    # Save state of this update
+    echo "$SERVICE_NAME=$NB_ENTRIES" > $ADSC_TMPFILE
+
   else
     RETVAL=0
   fi
-
-  # Save state of this update
-  echo "$SERVICE_NAME=$NB_ENTRIES" > $ADSC_TMPFILE
 
   return $RETVAL
 }
@@ -141,7 +143,7 @@ updateServiceBlacklistFile() {
   Y2=`cat $BLACKLIST_FILE`
 
   # Save result into the blacklist file
-  echo "$Y1\n$Y2" | awk 'NF' | sort -u > $BLACKLIST_FILE
+  echo "$Y1\n$Y2" | awk 'NF' | tr -d ' ' | sort -u | uniq -u > $BLACKLIST_FILE
 }
 
 
@@ -162,7 +164,7 @@ whitelistFiltering () {
   BLACKLIST_FILE=$1
   Y1=$2
 
-  Y2=`cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | sort -u`
+  Y2=`cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
   echo "$Y2" > $BLACKLIST_FILE
 }
 
