@@ -82,7 +82,7 @@ If you want to check actions of the script you can access to the logfile :
 
 ### Known issues ###
 
-- no issues
+- If you remove an address catched by ads-catcher, this address will be added during the next scan
 
 
 ### Link ###
@@ -92,6 +92,10 @@ Discussion on pi-hole forum : [link](https://discourse.pi-hole.net/t/how-do-i-bl
 
 
 ## Changelog ##
+**v1.1.1** *[md5:2f4f19d98ca644f405689ce9c79b322a]*   
+- [FIXED] whitelist filtering issue that caused not working blacklist   
+- [ADDED] google manifest in the whitelist
+
 **v1.1.0** *[md5:8ce40ab7ec66ff37406317cf2676d9eb]*   
 - [ADDED] option to write (1) ads-catcher blacklist files or (2) blocked addresses into the pi-hole balcklist (default: (2))  
 - [ADDED] option to enable/disable backup files (default : disabled)   
