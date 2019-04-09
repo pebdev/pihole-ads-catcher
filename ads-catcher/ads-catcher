@@ -164,7 +164,7 @@ whitelistFiltering () {
   BLACKLIST_FILE=$1
   Y1=$2
 
-  Y2=`cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
+  Y2="$(cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | tr -d ' ' | sort -u)"
   echo "$Y2" > $BLACKLIST_FILE
 }
 
@@ -179,9 +179,7 @@ catcherYoutube () {
   touch $YOUTUBE_BLACKLIST
   
   # Extract dns request from the pihole logfiles
-  Y1A=`cat "$PIHOLE_LOGFILE" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
-  Y1B=`cat "$PIHOLE_LOGFILE.1" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
-  Y2="$Y1A\n$Y1B"
+  Y2="$({ gunzip -d pihole.log.*.gz --to-stdout & cat pihole.log pihole.log.1; } 2>/dev/null | awk '$5 ~ /^query/ && $6 ~ /googlevideo\.com$/{print $6}' | sort -u)"
 
   # Update service blacklist file
   updateServiceBlacklistFile "$YOUTUBE_BLACKLIST" "$Y2"
