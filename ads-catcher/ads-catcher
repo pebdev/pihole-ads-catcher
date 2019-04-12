@@ -10,7 +10,7 @@
 ##############################################################################
 
 # ads-catcher internal informations
-ADSC_VERSION="v1.1.1"
+ADSC_VERSION="v1.2.0"
 
 # Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
@@ -37,18 +37,51 @@ readSetting () {
 
 
 ##############################################################################
+# @brief : function to read parameter from the temporary file
+# @param $1 : parameter name to read
+# @return value of the setting
+##############################################################################
+readTmpParameter () {
+
+  # Read value of the wanted parameter
+  echo "`cat $ADSC_TMPFILE | grep $1 | cut -d= -f2`"
+}
+
+
+##############################################################################
+# @brief : function to write parameter into the temporary file
+# @param $1 : parameter name to read
+# @param $2 : value of the parameter
+##############################################################################
+writeTmpParameter () {
+
+  # Argument check
+  if [ $# -lt 2 ]; then
+    echo "[writeTmpParameter] ERROR, missing argument"
+    return 0
+  fi
+
+  # Remove previous entry from the file
+  sed -i "/$1/d" $ADSC_TMPFILE
+
+  # Write new entry
+  echo "$1=$2" >> $ADSC_TMPFILE
+}
+
+
+##############################################################################
 # @brief : function to add path of ads-catcher blacklist files
 ##############################################################################
 addBlacklistFilesToPihole () {
   
   # Content of the pihole blacklist file
-  PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
+  F1_PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
 
   # List of ads-catcher files
-  ADSC_BLACKLIST_FILES="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
+  F1_ADSC_BLACKLIST_FILES="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
 
   # Save result into the blacklist file
-  echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_FILES" | awk 'NF' | tr -d ' ' | sort -u | uniq -u  > $PIHOLE_BLACKLIST_FILE
+  echo "$F1_PIHOLE_BLACKLIST_CONTENT\n$F1_ADSC_BLACKLIST_FILES" | awk 'NF' | tr -d ' ' | sort -u | uniq -u  > $PIHOLE_BLACKLIST_FILE
 }
 
 
@@ -62,64 +95,65 @@ addBlacklistAddressesToPihole () {
   sed -i '/ads-catcher\//d' $PIHOLE_BLACKLIST_FILE
 
   # Content of the pihole blacklist file
-  PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
+  F2_PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
 
   # ads-catcher file list
-  ADSC_BLACKLIST_FILELIST="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
+  F2_ADSC_BLACKLIST_FILELIST="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
 
   # Content of the ads-catcher blacklist file
-  ADSC_BLACKLIST_CONTENT="`cat $ADSC_BLACKLIST_FILELIST`"
+  F2_ADSC_BLACKLIST_CONTENT="`cat $F2_ADSC_BLACKLIST_FILELIST`"
 
   # Save result into the blacklist file
-  Y1=`echo "$PIHOLE_BLACKLIST_CONTENT\n$ADSC_BLACKLIST_CONTENT" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
-  echo "$Y1" > $PIHOLE_BLACKLIST_FILE
+  F2_RETVAL=`echo "$F2_PIHOLE_BLACKLIST_CONTENT\n$F2_ADSC_BLACKLIST_CONTENT" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
+  echo "$F2_RETVAL" > $PIHOLE_BLACKLIST_FILE
 }
+
 
 ##############################################################################
 # @brief : function to know if we need to update pihole after calling a catcher
 # @param $1 : file that contains list of addresses to block
 # @return 1 if we need to update pihole, otherwise 0
 ##############################################################################
-isPiholeUpdateNeeded () {
+#isPiholeUpdateNeeded () {
 
   # Argument check
-  if [ $# -lt 1 ]; then
-    echo "[isPiholeUpdateNeeded] ERROR, missing argument"
-    return 0
-  fi
+  #if [ $# -lt 1 ]; then
+   # echo "[isPiholeUpdateNeeded] ERROR, missing argument"
+   # return 0
+  #fi
 
   # Parameters
-  BLACKLIST_FILE=$1
+  #F3_BLACKLIST_FILE=$1
 
   # Extract service name
-  SERVICE_NAME=`echo $BLACKLIST_FILE | sed 's/\-blacklist.txt'//`
-  SERVICE_NAME=`basename $SERVICE_NAME`
+  #F3_SERVICE_NAME=`echo $F3_BLACKLIST_FILE | sed 's/\-blacklist.txt'//`
+  #F3_SERVICE_NAME=`basename $F3_SERVICE_NAME`
 
   # Compute number of entries
-  NB_ENTRIES=`wc -l $BLACKLIST_FILE | cut -d\  -f1`
+  #F3_NB_ENTRIES=`wc -l $F3_BLACKLIST_FILE | cut -d\  -f1`
 
   # Just for history, do a backup of this file
-  if [ $ADSC_CONF_BLACKLIST_BACKUP -eq 1 ]; then
-    BACKUP_NAME="$SERVICE_NAME-$NB_ENTRIES.txt"
-    cp $BLACKLIST_FILE $ADSC_HISTORY_FOLDER/$BACKUP_NAME
-  fi
+  #if [ $ADSC_CONF_BLACKLIST_BACKUP -eq 1 ]; then
+    #F3_BACKUP_NAME="$F3_SERVICE_NAME-$F3_NB_ENTRIES.txt"
+    #cp $F3_BLACKLIST_FILE $ADSC_HISTORY_FOLDER/$F3_BACKUP_NAME
+  #fi
 
   # Extract previous number of entries
-  PREVIOUS_NB_ENTRIES=`cat $ADSC_TMPFILE | grep $SERVICE_NAME | cut -d= -f2`
+  #F3_PREVIOUS_NB_ENTRIES=$(readTmpParameter $F3_SERVICE_NAME)
 
   # Update pihole with new entries
-  if [ "$NB_ENTRIES" != "$PREVIOUS_NB_ENTRIES" ]; then
-    RETVAL=1
+  #if [ "$F3_NB_ENTRIES" != "$F3_PREVIOUS_NB_ENTRIES" ]; then
+    #F3_RETVAL=1
 
     # Save state of this update
-    echo "$SERVICE_NAME=$NB_ENTRIES" > $ADSC_TMPFILE
+    #writeTmpParameter $F3_SERVICE_NAME $F3_NB_ENTRIES
 
-  else
-    RETVAL=0
-  fi
+  #else
+    #F3_RETVAL=0
+  #fi
 
-  return $RETVAL
-}
+  #return $F3_RETVAL
+#}
 
 
 ##############################################################################
@@ -136,20 +170,20 @@ updateServiceBlacklistFile() {
   fi
 
   # Parameters
-  BLACKLIST_FILE=$1
-  Y1=$2
+  F4_BLACKLIST_FILE=$1
+  F4_Y1=$2
 
   # Get previous blacklisted addresses
-  Y2=`cat $BLACKLIST_FILE`
+  F4_Y2=`cat $F4_BLACKLIST_FILE`
 
   # Save result into the blacklist file
-  echo "$Y1\n$Y2" | awk 'NF' | tr -d ' ' | sort -u | uniq -u > $BLACKLIST_FILE
+  echo "$F4_Y1\n$F4_Y2" | awk 'NF' | tr -d ' ' | sort -u | uniq -u > $F4_BLACKLIST_FILE
 }
 
 
 ##############################################################################
 # @brief : function to remove whitelisted address from the blacklist file
-# @param $1 : blacklist file that contains list of addresses to block
+# @param $1 : strings that contains list of addresses to block
 # @param $2 : whitelisted address
 ##############################################################################
 whitelistFiltering () {
@@ -161,11 +195,75 @@ whitelistFiltering () {
   fi
 
   # Parameters
-  BLACKLIST_FILE=$1
-  Y1=$2
+  F5_BLACKLIST_ADDRESSES=$1
+  F5_Y1=$2
 
-  Y2="$(cat $BLACKLIST_FILE | sed "/$Y1/d" | awk 'NF' | tr -d ' ' | sort -u)"
-  echo "$Y2" > $BLACKLIST_FILE
+  F5_Y2="$(echo "$F5_BLACKLIST_ADDRESSES" | sed "/$F5_Y1/d" | awk 'NF' | tr -d ' ' | sort -u)"
+  echo "$F5_Y2"
+}
+
+
+##############################################################################
+# @brief : function to read pihole log file (only new lines)
+# @return : extracted data
+##############################################################################
+readPiholeMainLogs () {
+
+  # Save last line of each logfiles to parse new log lony next time
+  F6_NB_LINES_L0=`cat "$PIHOLE_LOGFILE" | wc -l`
+  F6_NB_LINES_L1=`cat "$PIHOLE_LOGFILE.1" | wc -l`
+ 
+  # Read tmp file to keep last line only
+  F6_TMP_NB_LINES_L0=$(readTmpParameter "plog0")
+  F6_TMP_NB_LINES_L1=$(readTmpParameter "plog1")
+
+  # Check values
+  if [ -z "$F6_TMP_NB_LINES_L0" ]; then
+    F6_TMP_NB_LINES_L0=1
+  fi
+
+  if [ -z "$F6_TMP_NB_LINES_L1" ]; then
+    F6_TMP_NB_LINES_L1=1
+  fi
+
+  # Check if logs where flushed
+  if [ "$F6_NB_LINES_L0" -lt "$F6_TMP_NB_LINES_L0" ]; then
+    F6_TMP_NB_LINES_L0=1
+  fi
+
+  if [ "$F6_NB_LINES_L1" -lt "$F6_TMP_NB_LINES_L1" ]; then
+    F6_TMP_NB_LINES_L1=1
+  fi
+
+  # Remove no new lines
+  F6_L0=`cat "$PIHOLE_LOGFILE" | sed "$F6_TMP_NB_LINES_L0,$F6_NB_LINES_L0!d"`
+  F6_L1=`cat "$PIHOLE_LOGFILE.1" | sed "$F6_TMP_NB_LINES_L1,$F6_NB_LINES_L1!d"`
+
+  # Extract dns request from the pihole logfiles
+  F6_L0B=`echo "$F6_L0" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
+  F6_L1B=`echo "$F6_L1" | grep query | grep googlevideo.com | sed 's/.*query\[A*]\ //' | sed 's/from\ [a-Az-Z0-9.:]*//' | sort -u`
+ 
+  # Save current number of lines for next extraction
+  writeTmpParameter "plog0" "$F6_NB_LINES_L0"
+  writeTmpParameter "plog1" "$F6_NB_LINES_L1"
+
+  # Prepare output and return it
+  F6_LOG_OUT="$F6_L0B\n$F6_L1B"
+  echo "$F6_LOG_OUT"
+}
+
+
+##############################################################################
+# @brief : function to read all pihole log files
+# @return : extracted data
+##############################################################################
+readPiholeAllLogs () {
+
+  # Extract dns request from the pihole logfiles
+  F8_Y2="$({ gunzip -d $PIHOLE_LOGFILE.*.gz --to-stdout & cat $PIHOLE_LOGFILE $PIHOLE_LOGFILE.1; } 2>/dev/null | awk '$5 ~ /^query/ && $6 ~ /googlevideo\.com$/{print $6}' | sort -u)"
+
+  # Return list of addresses
+  echo "$F8_Y2"
 }
 
 
@@ -175,23 +273,49 @@ whitelistFiltering () {
 ##############################################################################
 catcherYoutube () {
 
+  F7_RETVAL=1
+
   # be sure that the blacklist file exist
   touch $YOUTUBE_BLACKLIST
   
-  # Extract dns request from the pihole logfiles
-  Y2="$({ gunzip -d pihole.log.*.gz --to-stdout & cat pihole.log pihole.log.1; } 2>/dev/null | awk '$5 ~ /^query/ && $6 ~ /googlevideo\.com$/{print $6}' | sort -u)"
-
-  # Update service blacklist file
-  updateServiceBlacklistFile "$YOUTUBE_BLACKLIST" "$Y2"
+  # Read logfiles
+  if [ "$ADSC_ARGS_READ_ALL_LOGS" -eq 1 ]; then
+    echo "ALL"
+    F7_Y2=$(readPiholeAllLogs)
+  else
+    F7_Y2=$(readPiholeMainLogs)
+  fi
 
   # Do a whitelist filtering
-  whitelistFiltering "$YOUTUBE_BLACKLIST" "redirector.googlevideo.com"
-  whitelistFiltering "$YOUTUBE_BLACKLIST" "manifest.googlevideo.com"
+  F7_Y2=$(whitelistFiltering "$F7_Y2" "redirector.googlevideo.com")
+  F7_Y2=$(whitelistFiltering "$F7_Y2" "manifest.googlevideo.com")
 
+  # Update service blacklist file (used with separated file option only)
+  updateServiceBlacklistFile "$YOUTUBE_BLACKLIST" "$F7_Y2"
+ 
   # Check treatments result
-  isPiholeUpdateNeeded "$YOUTUBE_BLACKLIST"
+  if [ -z "$F7_Y2" ]; then
+    F7_RETVAL=0
+  fi
 
-  return $?
+  return $F7_RETVAL
+}
+
+
+##############################################################################
+# @brief : display help menu and quit
+##############################################################################
+help () {
+
+  echo "--------------------------------------------------------------------"
+  echo "Usage :"
+  echo " ads-catcher [-a][–h]"
+  echo ""
+  echo "Options :"
+  echo " -a  Read all pihole logs (useful for the first launch)"
+  echo " -h  Display this help"
+  echo "--------------------------------------------------------------------"
+  exit
 }
 
 
@@ -201,6 +325,7 @@ catcherYoutube () {
 echo "ads-catcher - $ADSC_VERSION"
 
 # Settings
+ADSC_ARGS_READ_ALL_LOGS=0
 ADSC_CONF_BLACKLIST_BACKUP=$(readSetting blacklist_backup)
 ADSC_CONF_BLACKLIST_SEPARATED_FILES=$(readSetting blacklist_seperated_files)
 
@@ -208,6 +333,15 @@ ADSC_CONF_BLACKLIST_SEPARATED_FILES=$(readSetting blacklist_seperated_files)
 touch $ADSC_TMPFILE
 mkdir -p $ADSC_BLACKLIST_FOLDER
 mkdir -p $ADSC_HISTORY_FOLDER
+
+# Special arguments
+while getopts ":ha" opt; do
+  case ${opt} in
+    h )  help ;;
+    a )  ADSC_ARGS_READ_ALL_LOGS=1;;
+    \? ) help;;
+  esac
+done
 
 # Call different catchers
 catcherYoutube
