@@ -2,6 +2,9 @@
 
 set -e
 
+echo "Removed deprectated configuration file..."
+rm -f /etc/ads-catcher.cfg
+
 echo "Removing previous crontab entry..."
 sed -i '/ads-catcher/d' /etc/crontab
 

@@ -26,7 +26,7 @@ FILENAME="ads-catcher_$1_all.deb"
 echo "- Preparing files..."
 F_MD5=$SCRIPT_PATH/debian/DEBIAN/md5sums
 P_BIN=$SCRIPT_PATH/debian/usr/bin
-P_ETC=$SCRIPT_PATH/debian/etc
+#P_ETC=$SCRIPT_PATH/debian/etc
 P_DOC=$SCRIPT_PATH/debian/usr/share/doc/ads-catcher
 P_MAN=$SCRIPT_PATH/debian/usr/share/man/man1
 
@@ -43,20 +43,20 @@ rm -f $SCRIPT_PATH/*.deb
 
 # Create needed directory
 mkdir -p $P_BIN
-mkdir -p $P_ETC
+#mkdir -p $P_ETC
 mkdir -p $P_DOC
 mkdir -p $P_MAN
 
 # Copy files
 cp $SCRIPT_PATH/../ads-catcher/ads-catcher $P_BIN
-cp $SCRIPT_PATH/../ads-catcher/settings.txt $P_ETC/ads-catcher.cfg
+#cp $SCRIPT_PATH/../ads-catcher/settings.txt $P_ETC/ads-catcher.cfg
 cp $SCRIPT_PATH/copyright $P_DOC
 gzip -9nk $SCRIPT_PATH/ads-catcher.1 && mv $SCRIPT_PATH/ads-catcher.1.gz $P_MAN/
 
 # Compute md5
 cd $SCRIPT_PATH/debian
 md5sum usr/bin/ads-catcher > $F_MD5
-md5sum etc/ads-catcher.cfg >> $F_MD5
+#md5sum etc/ads-catcher.cfg >> $F_MD5
 md5sum usr/share/doc/ads-catcher/copyright >> $F_MD5
 md5sum usr/share/man/man1/ads-catcher.1.gz >> $F_MD5
 cd - > /dev/null
