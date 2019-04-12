@@ -14,14 +14,9 @@ ADSC_VERSION="v1.2.0"
 
 # Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
-ADSC_SETTINGS=/etc/ads-catcher.cfg
+#ADSC_SETTINGS=/etc/ads-catcher.cfg
 PIHOLE_LOGFILE=/var/log/pihole.log
 PIHOLE_BLACKLIST_FILE=/etc/pihole/blacklist.txt
-
-# Blacklist files
-ADSC_BLACKLIST_FOLDER=/usr/share/ads-catcher/blacklist
-ADSC_HISTORY_FOLDER=/usr/share/ads-catcher/history/
-YOUTUBE_BLACKLIST=$ADSC_BLACKLIST_FOLDER/youtube-blacklist.txt
 
 
 ##############################################################################
@@ -29,11 +24,11 @@ YOUTUBE_BLACKLIST=$ADSC_BLACKLIST_FOLDER/youtube-blacklist.txt
 # @param $1 : configuration name to read
 # @return value of the setting
 ##############################################################################
-readSetting () {
-
-  # Read value of the wanted seeting
-  echo "`cat $ADSC_SETTINGS | grep $1 | tr -d ' ' | cut -d= -f2`"
-}
+#readSetting () {
+#
+#  # Read value of the wanted seeting
+#  echo "`cat $ADSC_SETTINGS | grep $1 | tr -d ' ' | cut -d= -f2`"
+#}
 
 
 ##############################################################################
@@ -66,118 +61,6 @@ writeTmpParameter () {
 
   # Write new entry
   echo "$1=$2" >> $ADSC_TMPFILE
-}
-
-
-##############################################################################
-# @brief : function to add path of ads-catcher blacklist files
-##############################################################################
-addBlacklistFilesToPihole () {
-  
-  # Content of the pihole blacklist file
-  F1_PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
-
-  # List of ads-catcher files
-  F1_ADSC_BLACKLIST_FILES="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
-
-  # Save result into the blacklist file
-  echo "$F1_PIHOLE_BLACKLIST_CONTENT\n$F1_ADSC_BLACKLIST_FILES" | awk 'NF' | tr -d ' ' | sort -u | uniq -u  > $PIHOLE_BLACKLIST_FILE
-}
-
-
-##############################################################################
-# @brief : function to add blacklisted addresses directly inside the pi-hole 
-#          blacklist file
-##############################################################################
-addBlacklistAddressesToPihole () {
- 
-  # Remove ads-catcher blacklist files from pi-hole blacklist
-  sed -i '/ads-catcher\//d' $PIHOLE_BLACKLIST_FILE
-
-  # Content of the pihole blacklist file
-  F2_PIHOLE_BLACKLIST_CONTENT="`cat $PIHOLE_BLACKLIST_FILE`"
-
-  # ads-catcher file list
-  F2_ADSC_BLACKLIST_FILELIST="`ls -d $ADSC_BLACKLIST_FOLDER/*`"
-
-  # Content of the ads-catcher blacklist file
-  F2_ADSC_BLACKLIST_CONTENT="`cat $F2_ADSC_BLACKLIST_FILELIST`"
-
-  # Save result into the blacklist file
-  F2_RETVAL=`echo "$F2_PIHOLE_BLACKLIST_CONTENT\n$F2_ADSC_BLACKLIST_CONTENT" | awk 'NF' | tr -d ' ' | sort -u | uniq -u`
-  echo "$F2_RETVAL" > $PIHOLE_BLACKLIST_FILE
-}
-
-
-##############################################################################
-# @brief : function to know if we need to update pihole after calling a catcher
-# @param $1 : file that contains list of addresses to block
-# @return 1 if we need to update pihole, otherwise 0
-##############################################################################
-#isPiholeUpdateNeeded () {
-
-  # Argument check
-  #if [ $# -lt 1 ]; then
-   # echo "[isPiholeUpdateNeeded] ERROR, missing argument"
-   # return 0
-  #fi
-
-  # Parameters
-  #F3_BLACKLIST_FILE=$1
-
-  # Extract service name
-  #F3_SERVICE_NAME=`echo $F3_BLACKLIST_FILE | sed 's/\-blacklist.txt'//`
-  #F3_SERVICE_NAME=`basename $F3_SERVICE_NAME`
-
-  # Compute number of entries
-  #F3_NB_ENTRIES=`wc -l $F3_BLACKLIST_FILE | cut -d\  -f1`
-
-  # Just for history, do a backup of this file
-  #if [ $ADSC_CONF_BLACKLIST_BACKUP -eq 1 ]; then
-    #F3_BACKUP_NAME="$F3_SERVICE_NAME-$F3_NB_ENTRIES.txt"
-    #cp $F3_BLACKLIST_FILE $ADSC_HISTORY_FOLDER/$F3_BACKUP_NAME
-  #fi
-
-  # Extract previous number of entries
-  #F3_PREVIOUS_NB_ENTRIES=$(readTmpParameter $F3_SERVICE_NAME)
-
-  # Update pihole with new entries
-  #if [ "$F3_NB_ENTRIES" != "$F3_PREVIOUS_NB_ENTRIES" ]; then
-    #F3_RETVAL=1
-
-    # Save state of this update
-    #writeTmpParameter $F3_SERVICE_NAME $F3_NB_ENTRIES
-
-  #else
-    #F3_RETVAL=0
-  #fi
-
-  #return $F3_RETVAL
-#}
-
-
-##############################################################################
-# @brief : function to update blacklist file with clean feature
-# @param $1 : blacklist file that contains list of addresses to block
-# @param $2 : list of addresses to add
-##############################################################################
-updateServiceBlacklistFile() {
-
-  # Argument check
-  if [ $# -lt 2 ]; then
-    echo "[updateServiceBlacklistFile] ERROR, missing argument :"
-    return
-  fi
-
-  # Parameters
-  F4_BLACKLIST_FILE=$1
-  F4_Y1=$2
-
-  # Get previous blacklisted addresses
-  F4_Y2=`cat $F4_BLACKLIST_FILE`
-
-  # Save result into the blacklist file
-  echo "$F4_Y1\n$F4_Y2" | awk 'NF' | tr -d ' ' | sort -u | uniq -u > $F4_BLACKLIST_FILE
 }
 
 
@@ -274,13 +157,9 @@ readPiholeAllLogs () {
 catcherYoutube () {
 
   F7_RETVAL=1
-
-  # be sure that the blacklist file exist
-  touch $YOUTUBE_BLACKLIST
   
   # Read logfiles
   if [ "$ADSC_ARGS_READ_ALL_LOGS" -eq 1 ]; then
-    echo "ALL"
     F7_Y2=$(readPiholeAllLogs)
   else
     F7_Y2=$(readPiholeMainLogs)
@@ -290,15 +169,8 @@ catcherYoutube () {
   F7_Y2=$(whitelistFiltering "$F7_Y2" "redirector.googlevideo.com")
   F7_Y2=$(whitelistFiltering "$F7_Y2" "manifest.googlevideo.com")
 
-  # Update service blacklist file (used with separated file option only)
-  updateServiceBlacklistFile "$YOUTUBE_BLACKLIST" "$F7_Y2"
- 
-  # Check treatments result
-  if [ -z "$F7_Y2" ]; then
-    F7_RETVAL=0
-  fi
-
-  return $F7_RETVAL
+  # Return list of addresses
+  echo "$F7_Y2"
 }
 
 
@@ -326,13 +198,9 @@ echo "ads-catcher - $ADSC_VERSION"
 
 # Settings
 ADSC_ARGS_READ_ALL_LOGS=0
-ADSC_CONF_BLACKLIST_BACKUP=$(readSetting blacklist_backup)
-ADSC_CONF_BLACKLIST_SEPARATED_FILES=$(readSetting blacklist_seperated_files)
 
 # Create blacklist folder and tmp files to be sure
 touch $ADSC_TMPFILE
-mkdir -p $ADSC_BLACKLIST_FOLDER
-mkdir -p $ADSC_HISTORY_FOLDER
 
 # Special arguments
 while getopts ":ha" opt; do
@@ -344,20 +212,10 @@ while getopts ":ha" opt; do
 done
 
 # Call different catchers
-catcherYoutube
-RETVAL_YOUTUBE=$?
+RETVAL_YOUTUBE=$(catcherYoutube)
 
-if [ $RETVAL_YOUTUBE -eq 1 ]; then
-  
-  if [ $ADSC_CONF_BLACKLIST_SEPARATED_FILES -eq 1 ]; then
-    # Refresh list of blacklist files
-    addBlacklistFilesToPihole
-  else
-    # Case of not separated files of blacklisted addresses
-    addBlacklistAddressesToPihole
-  fi
-
+if [ -n "$RETVAL_YOUTUBE" ]; then
   # Update pihole with new entries
-  /usr/local/bin/pihole -g
+  /usr/local/bin/pihole -b $RETVAL_YOUTUBE
 fi
 
