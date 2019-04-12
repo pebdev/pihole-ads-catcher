@@ -30,12 +30,17 @@ Debian package is provided, you just need to download it ([release page](https:/
 Content of the package :
 
 	 /
-	 ├── /etc/ads-catcher.cfg
 	 ├── /usr/bin/ads-catcher
 	 ├── /usr/share/doc/ads-catcher/copyright
 	 ├── /usr/share/man/man1/ads-catcher.1.gz
 
 Note : you can see content with this command **dpkg -c < deb_file >**
+
+After installation, you can ask to ads-catcher to parse all pihole logfiles by launching this command :
+
+	sudo ads-catcher -a
+
+With this option, ads-catcher will create a first database of youtube addresses to blacklist.
 
 
 ### Uninstall ###
@@ -43,34 +48,6 @@ Note : you can see content with this command **dpkg -c < deb_file >**
 To uninstall this package, just lanch this command :
 
 	sudo dpkg -r ads-catcher
-
-
-### Configuration ###
-
-Configuration file location : **/etc/ads-catcher.cfg**
-
-	# If enabled, ads-catcher creates independent file to add blacklisted
-	# addresses for eache services (youtube, etc.) and add link of these
-	# files to the pi-hole blacklist file.
-	# If disabled, ads-catcher writes blacklisted addresses directly inside
-	# pi-hole blacklist file.
-	#
-	# Values  : 0=disabled | 1=enabled
-	# Default : 0
-	#
-	blacklist_seperated_files=0
-	
-	
-	# With this feature, ads-catcher creates a backup file of blacklisted
-	# addresses each time that it add new addresses.
-	# With it, you can find latest addresses that have been added.
-	# Backup files are stored into : <root_script_path>/backup/
-	# Filename : <service>_<number-of-addresses>.txt
-	#
-	# Values  : 0=disabled | 1=enabled
-	# Default : 0
-	#
-	blacklist_backup=0
 
 
 ### Logfile ###
@@ -82,7 +59,12 @@ If you want to check actions of the script you can access to the logfile :
 
 ### Known issues ###
 
-- If you remove an address catched by ads-catcher, this address will be added during the next scan
+- no issue
+
+### Todo ###
+
+- Finalize ads-catcher-unlocker to unlock main video  if blocked
+- Launch ads-catcher -a during installation when script will be able to detect deadlock with main video
 
 
 ### Link ###
@@ -90,8 +72,17 @@ If you want to check actions of the script you can access to the logfile :
 Discussion on pi-hole forum : [link](https://discourse.pi-hole.net/t/how-do-i-block-ads-on-youtube/253/327)
 
 
-
 ## Changelog ##
+**v1.2.0** *[md5:82c64f9548f5215ebde262f62667f9cc]*   
+- [ADDED] Option to parse all logfiles (useful for the initilization)    
+- [CHANGED] Check new addresses only, not all addresses from the pihole logfile    
+- [CHANGED] Now just refresh blacklist entries, not all gravity lists   
+- [CHANGED] Internal refactoring   
+- [UPDATED] Manual   
+- [REMOVED] Separated logfiles feature   
+- [REMOVED] History feature   
+- [REMOVED] Configuration file (separated and blacklist options)   
+
 **v1.1.1** *[md5:2f4f19d98ca644f405689ce9c79b322a]*   
 - [FIXED] whitelist filtering issue that caused not working blacklist   
 - [ADDED] google manifest in the whitelist

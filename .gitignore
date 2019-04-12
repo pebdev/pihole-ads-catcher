@@ -1,4 +1,4 @@
-pkg/*.deb
+*.deb
 pkg/debian/etc/
 pkg/debian/usr/
 
