@@ -1,0 +1,199 @@
+#!/bin/sh
+
+ADSCU_VERSION="v1.0.0"
+ADSCU_CONFIG_DEBUG_OUT="/tmp/adscu.log" #dev/stdout"
+ADSCU_CONFIG_HISTORY_TIME_SEC=45
+
+
+##############################################################################
+# @brief : function to convert Pihole time to seconds
+# @param $1 : time (format HH:MM:SS)
+# @return time in seconds, otherwise zero in case of error
+##############################################################################
+convertPiholeDateToSeconds () {
+
+  # Argument check
+  if [ $# -lt 1 ]; then
+    echo "0"
+    return
+  fi
+
+  # Extract and convert data in seconds
+  F0_TIME_H=`echo "$1" | cut -d : -f1`
+  F0_TIME_M=`echo "$1" | cut -d : -f2`
+  F0_TIME_S=`echo "$1" | cut -d : -f3`
+  
+  # Force convertion in int to avoid error during calculation
+  F0_TIME_INTH=`expr $F0_TIME_H + 0`
+  F0_TIME_INTM=`expr $F0_TIME_M + 0`
+  F0_TIME_INTS=`expr $F0_TIME_S + 0`
+
+  # Compute time in seconds
+  TIME_TOTAL=$(($F0_TIME_INTH*3600+$F0_TIME_INTM*60+$F0_TIME_INTS))
+
+  echo "$TIME_TOTAL"
+}
+
+
+##############################################################################
+# @brief : function used to remove old entries from the history list
+# @param $1 : history list
+# @return cleaned history, otherwise empty string in case of error
+##############################################################################
+cleanOldHistoryEntries () {
+
+  # Argument check
+  if [ $# -lt 1 ]; then
+    echo ""
+    return
+  fi
+
+  F2_HISTORY="$1"
+  F2_LOOP_INC=0
+  F2_LOOP_NB_LINES=`echo "$F2_HISTORY" | wc -l`
+
+  # Calculate latest time from history
+  F2_LATEST_TIME=$(convertPiholeDateToSeconds "`echo \"$F2_HISTORY\" | tail -n1 | cut -d ' ' -f1`")
+
+  # Parse each line to remove old entries
+  F2_HISTORY=$(echo "$F2_HISTORY" | while read F2_LINE 
+  do
+
+    # Calculate time of this line
+    F2_LINE_TIME=$(convertPiholeDateToSeconds "`echo \"$F2_LINE\" | cut -d ' ' -f1`")
+    F2_LINE_TIME_DIFF=$(($F2_LATEST_TIME-$F2_LINE_TIME))
+
+    # If too old, we remove this line from history
+    if [ $F2_LINE_TIME_DIFF -gt $ADSCU_CONFIG_HISTORY_TIME_SEC ]; then
+      F2_HISTORY=`echo "$F2_HISTORY" | sed "/$F2_LINE/d"`
+    fi
+    
+    # Not beautiful, but only way that I found to extract data from the loop context
+    F2_LOOP_INC=$(($F2_LOOP_INC+1))
+    if [ $F2_LOOP_INC -ge $F2_LOOP_NB_LINES ]; then
+      echo  "$F2_HISTORY"
+    fi
+   
+  done)
+  
+  echo  "$F2_HISTORY"
+}
+
+
+##############################################################################
+# @brief : function count and extract of addresses to unlock
+# @param $1 : history list
+# @return list of addresses to unlock
+##############################################################################
+extractUnlockList () {
+
+  # Argument check
+  if [ $# -lt 1 ]; then
+    echo "0"
+    return
+  fi
+
+  # We count each entries
+  F3_COUNT_LIST=`echo "$1" | cut -d ' ' -f2 | sort | uniq -c | sort -n | sed 's/[\ ]*//'`
+  echo "$F3_COUNT_LIST\n" >> $ADSCU_CONFIG_DEBUG_OUT
+
+
+  echo "$F3_COUNT_LIST"
+}
+
+
+##############################################################################
+# @brief : check Youtube history
+# @param $1 : filtered log to parse
+# @param $2 : history list
+# @return list of history (updated)
+##############################################################################
+catcherYoutube () {
+  
+  # Argument check
+  if [ $# -lt 2 ]; then
+    echo ""
+    return
+  fi
+
+  # Keep youtube log only
+  F2_YOUTUBE=`echo "$1" | grep 'googlevideo.com'`
+  F2_HISTORY="$2"
+
+  if [ -n "$F2_YOUTUBE" ]; then
+    # Add new address into the history list
+    F2_HISTORY=`echo "$F2_HISTORY\n$F2_YOUTUBE" | awk 'NF'`
+  fi
+
+  echo "$F2_HISTORY"
+}
+
+
+##############################################################################
+# @brief : function used to check log from pihole and unlock addresses
+# @param $1 : new log to check
+# @param $2 : history list
+# @return history list (updated)
+##############################################################################
+logHook () {
+
+  # Argument check
+  if [ $# -lt 2 ]; then
+    echo ""
+    return
+  fi
+
+  # Filtering : keep only these data [HH:MM:SS address]
+  F1_QUERY=`echo "$1" | grep "query\[A\]" | sed 's/from\ [a-Az-Z0-9.:]*//' | sed 's/dnsmasq\[[0-9]*\]\: query\[[A]*\]*\ //' | cut -d ' ' -f3-`
+  F1_HISTORY="$2"
+  F1_UNLOCK_LIST=""
+
+  # Continue only if we have data to process
+  if [ -n "$F1_QUERY" ]; then
+
+    # Update history list with youtube addresses
+    F1_HISTORY=$(catcherYoutube "$F1_QUERY" "$F1_HISTORY")
+
+    # Remove old entries
+    F1_HISTORY=$(cleanOldHistoryEntries "$F1_HISTORY")
+
+    # Extract addresses to unlock
+    if [ -n "$F1_HISTORY" ]; then
+
+      F1_UNLOCK_LIST=$(extractUnlockList "$F1_HISTORY")
+    
+      # Unlock these addresses
+      #if [ -n "$F1_UNLOCK_LIST" ]; then
+      #  pihole $F1_UNLOCK_LIST
+      #fi
+    fi
+  fi
+
+  echo "$F1_HISTORY"
+}
+
+
+##############################################################################
+### MAIN ###
+##############################################################################
+echo "[`date`] ads-catcher-unlocker - $ADSCU_VERSION"
+echo "Debug mode enabled" > $ADSCU_CONFIG_DEBUG_OUT
+
+HISTORY_LIST=""
+
+# Monitoring of pihole log
+tail -f /var/log/pihole.log | while read LINE
+do
+  # Debug information
+  #LINE_YOUTUBE=`echo "$LINE" | grep query | grep googlevideo.com`
+  if [ -n "$LINE_YOUTUBE" ]; then
+    echo "==> $LINE_YOUTUBE" >> $ADSCU_CONFIG_DEBUG_OUT
+  fi
+
+  # Parse new logs and unlock if necessary
+  HISTORY_LIST=$(logHook "$LINE" "$HISTORY_LIST")
+
+  echo "[$HISTORY_LIST]"
+
+done
+
