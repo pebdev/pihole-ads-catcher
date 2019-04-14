@@ -1,0 +1,13 @@
+##############################################################################
+# ads-catcher - configuration file
+##############################################################################
+
+# When you load a video, ads-catcher-unlocker will temporary keeps address of 
+# the server to detect if you are not able to load the main video.
+# Change this parameter only if you know that you are doing
+#
+# Values  : 1-inf
+# Default : 2
+#
+unlocker_nb_retry=2
+
