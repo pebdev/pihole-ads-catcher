@@ -1,4 +1,5 @@
 *.deb
 pkg/debian/etc/
 pkg/debian/usr/
+pkg/debian/lib/
 
