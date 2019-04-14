@@ -194,7 +194,7 @@ help () {
 ##############################################################################
 ### MAIN ###
 ##############################################################################
-echo "ads-catcher - $ADSC_VERSION"
+echo "[`date`] ads-catcher - $ADSC_VERSION"
 
 # Settings
 ADSC_ARGS_READ_ALL_LOGS=0

@@ -3,6 +3,7 @@
 ADSCU_VERSION="v1.0.0"
 ADSCU_CONFIG_DEBUG_OUT="/tmp/adscu.log" #dev/stdout"
 ADSCU_CONFIG_HISTORY_TIME_SEC=45
+ADSCU_CONFIG_UNLOCK_NB_RETRY=2
 
 
 ##############################################################################
@@ -97,8 +98,13 @@ extractUnlockList () {
   F3_COUNT_LIST=`echo "$1" | cut -d ' ' -f2 | sort | uniq -c | sort -n | sed 's/[\ ]*//'`
   echo "$F3_COUNT_LIST\n" >> $ADSCU_CONFIG_DEBUG_OUT
 
+  # Extract addresses with multiple call
+  F3_LOCKED_ADDRESSES=`echo "$F3_COUNT_LIST" | awk '$1 > '"$ADSCU_CONFIG_UNLOCK_NB_RETRY"`
 
-  echo "$F3_COUNT_LIST"
+  # Remove these addresse
+  F3_LOCKED_ADDRESSES=`echo "$F3_LOCKED_ADDRESSES" | cut -d ' ' -f2 | tr '\n' ' '`
+
+  echo "$F3_LOCKED_ADDRESSES"
 }
 
 
@@ -162,6 +168,7 @@ logHook () {
 
       F1_UNLOCK_LIST=$(extractUnlockList "$F1_HISTORY")
     
+      echo "UNLOCK======\n$F1_UNLOCK_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
       # Unlock these addresses
       #if [ -n "$F1_UNLOCK_LIST" ]; then
       #  pihole $F1_UNLOCK_LIST
