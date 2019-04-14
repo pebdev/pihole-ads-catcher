@@ -2,12 +2,7 @@
 
 set -e
 
-echo "Removed deprectated configuration file..."
-rm -f /etc/ads-catcher.cfg
-
-echo "Removing previous crontab entry..."
-sed -i '/ads-catcher/d' /etc/crontab
-
-echo "Adding crontab entry..."
-echo "*/10 * * * * root /usr/bin/ads-catcher > /var/log/ads-catcher.log 2>&1" >> /etc/crontab
+echo "Enable and start systemd service..."
+deb-systemd-helper enable ads-catcher.service
+deb-systemd-invoke start ads-catcher.service
 
