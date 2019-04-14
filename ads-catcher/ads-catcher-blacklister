@@ -9,9 +9,6 @@
 # under this license.
 ##############################################################################
 
-# ads-catcher internal informations
-ADSC_VERSION="v1.2.0"
-
 # Log, settings and temporary files
 ADSC_TMPFILE=/tmp/ads-catcher.tmp
 #ADSC_SETTINGS=/etc/ads-catcher.cfg
@@ -194,7 +191,7 @@ help () {
 ##############################################################################
 ### MAIN ###
 ##############################################################################
-echo "[`date`] ads-catcher - $ADSC_VERSION"
+echo "[`date`] ads-catcher-blacklister"
 
 # Settings
 ADSC_ARGS_READ_ALL_LOGS=0

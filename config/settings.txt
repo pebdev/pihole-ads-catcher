@@ -2,7 +2,14 @@
 # ads-catcher - configuration file
 ##############################################################################
 
-# When you load a video, ads-catcher-unlocker will temporary keeps address of 
+# To check ads servers (from pihole logfiles), a blacklister is called every
+# N minutes.
+#
+# Values  : 1-inf
+# Default : 10
+blacklister_period_min=10
+
+# When you load a video, ads-catcher-unlocker will temporary keeps address of
 # the server to detect if you are not able to load the main video.
 # Change this parameter only if you know that you are doing
 #
@@ -10,4 +17,11 @@
 # Default : 2
 #
 unlocker_nb_retry=2
+
+# To avoid to unlock all addresses from the blacklist file, ads-catcer considers
+# a maximum time of addresses history.
+#
+# Values  : 1-inf
+# Default : 45
+unlocker_history_time_sec=45
 

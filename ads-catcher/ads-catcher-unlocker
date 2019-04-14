@@ -1,9 +1,29 @@
 #!/bin/sh
+##############################################################################
+# PEB <pebdev@lavache.com>
+# 2019.03.24
+##############################################################################
+# Copyright (C) 2019
+# This file is copyright under the latest version of the EUPL.
+# Please see https://joinup.ec.europa.eu/collection/eupl for your rights
+# under this license.
+##############################################################################
 
-ADSCU_VERSION="v1.0.0"
+# Log, settings and temporary files
+ADSC_SETTINGS=/etc/ads-catcher.cfg
 ADSCU_CONFIG_DEBUG_OUT="/tmp/adscu.log" #dev/stdout"
-ADSCU_CONFIG_HISTORY_TIME_SEC=45
-ADSCU_CONFIG_UNLOCK_NB_RETRY=2
+
+
+##############################################################################
+# @brief : function to read setting from configruation file
+# @param $1 : configuration name to read
+# @return value of the setting
+##############################################################################
+readSetting () {
+
+  # Read value of the wanted seeting
+  echo "`cat $ADSC_SETTINGS | grep $1 | tr -d ' ' | cut -d= -f2`"
+}
 
 
 ##############################################################################
@@ -183,10 +203,16 @@ logHook () {
 ##############################################################################
 ### MAIN ###
 ##############################################################################
-echo "[`date`] ads-catcher-unlocker - $ADSCU_VERSION"
+echo "[`date`] ads-catcher-unlocker"
 echo "Debug mode enabled" > $ADSCU_CONFIG_DEBUG_OUT
 
 HISTORY_LIST=""
+ADSCU_CONFIG_HISTORY_TIME_SEC=$(readSetting "unlocker_history_time_sec")
+ADSCU_CONFIG_UNLOCK_NB_RETRY=$(readSetting "unlocker_nb_retry")
+
+echo "Settings :"
+echo " - Nb retry     : $ADSCU_CONFIG_UNLOCK_NB_RETRY"
+echo " - History time : $ADSCU_CONFIG_HISTORY_TIME_SEC"
 
 # Monitoring of pihole log
 tail -f /var/log/pihole.log | while read LINE
