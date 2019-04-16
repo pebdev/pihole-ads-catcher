@@ -3,7 +3,7 @@ Description=Ads-catcher Service
 After=multi-user.target
 
 [Service]
-Type=simple
+Type=idle
 ExecStart=/usr/bin/ads-catcher
 
 [Install]

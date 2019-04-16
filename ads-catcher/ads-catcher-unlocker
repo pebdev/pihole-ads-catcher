@@ -57,6 +57,26 @@ convertPiholeDateToSeconds () {
 
 
 ##############################################################################
+# @brief : function to extract day of a query
+# @param $1 : new query
+# @return date of the query
+##############################################################################
+extractQueryDay () {
+
+  # Argument check
+  if [ $# -lt 1 ]; then
+    return 0
+  fi
+
+  # Extract day of the query
+  F4_DAY_STR=`echo "$1" | cut -d ' ' -f2`
+  F4_DAY_INT=`expr $F4_DAY_STR + 0`
+
+  echo "$F4_DAY_INT"
+}
+
+
+##############################################################################
 # @brief : function used to remove old entries from the history list
 # @param $1 : history list
 # @return cleaned history, otherwise empty string in case of error
@@ -101,6 +121,7 @@ cleanOldHistoryEntries () {
 }
 
 
+
 ##############################################################################
 # @brief : function count and extract of addresses to unlock
 # @param $1 : history list
@@ -116,7 +137,10 @@ extractUnlockList () {
 
   # We count each entries
   F3_COUNT_LIST=`echo "$1" | cut -d ' ' -f2 | sort | uniq -c | sort -n | sed 's/[\ ]*//'`
-  echo "$F3_COUNT_LIST\n" >> $ADSCU_CONFIG_DEBUG_OUT
+  
+  # Debug informations
+  echo "COUNT========================" >> $ADSCU_CONFIG_DEBUG_OUT
+  echo "$F3_COUNT_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
 
   # Extract addresses with multiple call
   F3_LOCKED_ADDRESSES=`echo "$F3_COUNT_LIST" | awk '$1 > '"$ADSCU_CONFIG_UNLOCK_NB_RETRY"`
@@ -177,6 +201,7 @@ logHook () {
   # Continue only if we have data to process
   if [ -n "$F1_QUERY" ]; then
 
+   
     # Update history list with youtube addresses
     F1_HISTORY=$(catcherYoutube "$F1_QUERY" "$F1_HISTORY")
 
@@ -186,13 +211,25 @@ logHook () {
     # Extract addresses to unlock
     if [ -n "$F1_HISTORY" ]; then
 
+      #Debug informations
+      echo "" >> $ADSCU_CONFIG_DEBUG_OUT
+      echo "INPUT========================" >> $ADSCU_CONFIG_DEBUG_OUT
+      echo "$F1_QUERY" >> $ADSCU_CONFIG_DEBUG_OUT
+
+      echo "HISTORY======================" >> $ADSCU_CONFIG_DEBUG_OUT
+      echo "$F1_HISTORY" >> $ADSCU_CONFIG_DEBUG_OUT
+
       F1_UNLOCK_LIST=$(extractUnlockList "$F1_HISTORY")
-    
-      echo "UNLOCK======\n$F1_UNLOCK_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
+      
+      if [ -n "$F1_UNLOCK_LIST" ]; then
+        echo "UNLOCK=======================" >> $ADSCU_CONFIG_DEBUG_OUT
+        echo "$F1_UNLOCK_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
+      fi
+
       # Unlock these addresses
-      #if [ -n "$F1_UNLOCK_LIST" ]; then
-      #  pihole $F1_UNLOCK_LIST
-      #fi
+      if [ -n "$F1_UNLOCK_LIST" ]; then
+        pihole -b -d $F1_UNLOCK_LIST
+      fi
     fi
   fi
 
@@ -207,6 +244,7 @@ echo "[`date`] ads-catcher-unlocker"
 echo "Debug mode enabled" > $ADSCU_CONFIG_DEBUG_OUT
 
 HISTORY_LIST=""
+LAST_DAY=0
 ADSCU_CONFIG_HISTORY_TIME_SEC=$(readSetting "unlocker_history_time_sec")
 ADSCU_CONFIG_UNLOCK_NB_RETRY=$(readSetting "unlocker_nb_retry")
 
@@ -217,16 +255,22 @@ echo " - History time : $ADSCU_CONFIG_HISTORY_TIME_SEC"
 # Monitoring of pihole log
 tail -f /var/log/pihole.log | while read LINE
 do
-  # Debug information
-  #LINE_YOUTUBE=`echo "$LINE" | grep query | grep googlevideo.com`
-  if [ -n "$LINE_YOUTUBE" ]; then
-    echo "==> $LINE_YOUTUBE" >> $ADSCU_CONFIG_DEBUG_OUT
+
+  # Catch day of the query
+  TMP_DAY=$(extractQueryDay "$LINE")
+
+  if [ $TMP_DAY != $LAST_DAY ]; then
+
+    # Clear history
+    HISTORY_LIST=""
+    echo "New day, new history ($LAST_DAY / $TMP_DAY)" > $ADSCU_CONFIG_DEBUG_OUT
+
+    # Save the date
+    LAST_DAY=$TMP_DAY
   fi
 
   # Parse new logs and unlock if necessary
   HISTORY_LIST=$(logHook "$LINE" "$HISTORY_LIST")
-
-  echo "[$HISTORY_LIST]"
 
 done
 
