@@ -3,7 +3,7 @@ set -e
 
 if [ \( "$1" = "remove" \) ]; then
   
-  echo "Stop and disable systemd service..."
+  echo "Stop and disable systemd service ..."
   deb-systemd-invoke stop ads-catcher.service
   deb-systemd-helper purge ads-catcher.service
   deb-systemd-helper unmask ads-catcher.service

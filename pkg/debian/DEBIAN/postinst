@@ -2,7 +2,10 @@
 
 set -e
 
-echo "Enable and start systemd service..."
+echo "Parse pi-hole logfile ..."
+ads-catcher-blacklister -a
+
+echo "Enable and start systemd service ..."
 deb-systemd-helper enable ads-catcher.service
 deb-systemd-invoke start ads-catcher.service
 

@@ -55,8 +55,8 @@ mkdir -p $P_DOC
 mkdir -p $P_MAN
 
 # Copy files
-cp $SCRIPT_PATH/../ads-catcher/ads-catcher* $P_BIN
-cp $SCRIPT_PATH/../config/settings.txt $P_ETC/ads-catcher.cfg
+cp $SCRIPT_PATH/../ads-catcher/ads-catcher* $P_BIN/
+cp $SCRIPT_PATH/../config/* $P_ETC/
 cp $SCRIPT_PATH/../systemd/*.service $P_LIB/
 cp $SCRIPT_PATH/copyright $P_DOC
 gzip -9nkf $SCRIPT_PATH/../man/ads-catcher.1 && mv $SCRIPT_PATH/../man/ads-catcher.1.gz $P_MAN/

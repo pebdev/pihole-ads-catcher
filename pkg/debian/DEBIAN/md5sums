@@ -1,8 +1,8 @@
-d84b60f6893a6d7009d1d5ed080429cf  usr/bin/ads-catcher
-40b0f6721955f6bee8452b25c7f17d19  usr/bin/ads-catcher-blacklister
-be5d28cb776f08a6f8dcebf95fbfe8cb  usr/bin/ads-catcher-unlocker
-59e38214ff1ae437957010a1627c01cf  etc/ads-catcher.cfg
-46a0cf48f25f07e822f855b0cb41e0cb  lib/systemd/system/ads-catcher.service
+f7d38ef3640890c39c6858e5e9085abe  usr/bin/ads-catcher
+1ea65052ffaa815195557e8b15c52198  usr/bin/ads-catcher-blacklister
+377b28a73a75411740cbba2d536b8dfd  usr/bin/ads-catcher-unlocker
+f3545d0d37e00b4b3c6a8056699e1d47  etc/ads-catcher.cfg
+9bacaa37a389209d2757756e106d00e9  lib/systemd/system/ads-catcher.service
 d14fc2e5e5c747d24c9c8363d5759312  usr/share/doc/ads-catcher/copyright
 517eaee1b261ffb6c5672c44ff3b42a4  usr/share/man/man1/ads-catcher.1.gz
 d465133e3efd212c7a4dba9d2d7f54f2  usr/share/man/man1/ads-catcher-blacklister.1.gz
