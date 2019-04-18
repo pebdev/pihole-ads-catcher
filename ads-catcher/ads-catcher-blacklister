@@ -208,6 +208,10 @@ while getopts ":ha" opt; do
   esac
 done
 
+if [ $ADSC_ARGS_READ_ALL_LOGS -eq 1 ]; then
+  echo "Parsing all logfiles ..."
+fi
+
 # Call different catchers
 RETVAL_YOUTUBE=$(catcherYoutube)
 
