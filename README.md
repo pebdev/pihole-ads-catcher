@@ -1,6 +1,4 @@
-# Pi-Hole #
-
-## ads-catcher ##
+# Pi-Hole - ads-catcher #
 	
 ### What is it ? ###
 
@@ -9,7 +7,7 @@ This tool scans pi-hole logfiles to find youtube address of ads servers. It upda
 
 ### How it works ? ###
 
-This tool is called (by cron) every 10 minutes to check pi-hole logfiles.
+**Ads-catcher** is called every 10 minutes to check pi-hole logfiles.
 It does following actions :
 
 - scan pihole logfiles
@@ -18,7 +16,11 @@ It does following actions :
 - add blacklisted addresses to pihole list
 - launch pi-hole update to take account of new adresses
 
-<span style="color:red">This system needs time to remove ads but it has advantage to do the job alone, be patient.</span>
+**Ads-catcher-unlocker** (included in the package) is a tool that monitors server requests (throught pihole logs) to detect if your main video is blocked by an extreme filtering. If your are in this case, it will unlock main video.
+
+<span style="color:red">Note 1 : this system needs time to remove ads but it has advantage to do the job alone, be patient.</span>
+
+<span style="color:red">Note 2 : some time, your main video can be blocked. Ads-catcher includes a mechanism to detect and fix this situation, you just need to close and launch again your video.</span>
 
 
 ### Installation ###
@@ -30,17 +32,19 @@ Debian package is provided, you just need to download it ([release page](https:/
 Content of the package :
 
 	 /
+	 ├── /etc/ads-catcher.cfg
 	 ├── /usr/bin/ads-catcher
+	 ├── /usr/bin/ads-catcher-blacklister
+	 ├── /usr/bin/ads-catcher-unlocker
+	 ├── /lib/systemd/system/ads-catcher.service
 	 ├── /usr/share/doc/ads-catcher/copyright
 	 ├── /usr/share/man/man1/ads-catcher.1.gz
-
+	 ├── /usr/share/man/man1/ads-catcher-blacklister.1.gz
+	 ├── /usr/share/man/man1/ads-catcher-unlocker.1.gz
+	 
 Note : you can see content with this command **dpkg -c < deb_file >**
 
-After installation, you can ask to ads-catcher to parse all pihole logfiles by launching this command :
-
-	sudo ads-catcher -a
-
-With this option, ads-catcher will create a first database of youtube addresses to blacklist.
+During installation, ads-catcher parses all pihole logfiles to create a first database of youtube addresses to blacklist.
 
 
 ### Uninstall ###
@@ -52,9 +56,9 @@ To uninstall this package, just lanch this command :
 
 ### Logfile ###
 
-If you want to check actions of the script you can access to the logfile :
+If you want to check actions of scripts, you can access to the logfile :
 
-	cat /var/log/ads-catcher.log
+	cat /var/log/ads-catcher-blacklister.log
 
 
 ### Known issues ###
@@ -63,8 +67,7 @@ If you want to check actions of the script you can access to the logfile :
 
 ### Todo ###
 
-- Finalize ads-catcher-unlocker to unlock main video  if blocked
-- Launch ads-catcher -a during installation when script will be able to detect deadlock with main video
+- nothing for the moment
 
 
 ### Link ###
@@ -73,6 +76,14 @@ Discussion on pi-hole forum : [link](https://discourse.pi-hole.net/t/how-do-i-bl
 
 
 ## Changelog ##
+**v1.3.0** *[md5:b6cb3e7d72ab4fe409ee57aea25ac5ee]*   
+- [ADDED] ads-catcher-unlocker to detect blacklisted address of the main video   
+- [ADDED] use -a option to parse all log files during installation   
+- [ADDED] configuration file is back   
+- [ADDED] now ads-catcher manages scripts execution   
+- [CHANGED] ads-catcher renamed : ads-catcher-blacklister   
+- [CHANGED] use systemd instead of crontab   
+
 **v1.2.0** *[md5:82c64f9548f5215ebde262f62667f9cc]*   
 - [ADDED] Option to parse all logfiles (useful for the initilization)    
 - [CHANGED] Check new addresses only, not all addresses from the pihole logfile    
