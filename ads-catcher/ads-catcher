@@ -34,6 +34,7 @@ readSetting () {
 echo "[`date`] ads-catcher - $ADSC_VERSION"
 
 # Compute period call
+ADSCL_CONFIG_UNLOCKER_LOG=$(readSetting "unlocker_logfile")
 ADSCL_CONFIG_PERIOD_SEC=$(readSetting "blacklister_period_min")
 ADSCL_CONFIG_PERIOD_SEC=$(($ADSCL_CONFIG_PERIOD_SEC*60))
 
@@ -41,7 +42,7 @@ echo "Settings :"
 echo " - period : $ADSCL_CONFIG_PERIOD_SEC"
 
 # Launch unlocker script
-ads-catcher-unlocker > /var/log/ads-catcher-unlocker.log 2>&1 &
+ads-catcher-unlocker > $ADSCL_CONFIG_UNLOCKER_LOG 2>&1 &
 
 # Launch blacklister script every 10 minutes
 while true

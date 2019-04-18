@@ -11,7 +11,6 @@
 
 # Log, settings and temporary files
 ADSC_SETTINGS=/etc/ads-catcher.cfg
-ADSCU_CONFIG_DEBUG_OUT="/tmp/adscu.log" #dev/stdout"
 
 
 ##############################################################################
@@ -143,7 +142,7 @@ extractUnlockList () {
   echo "$F3_COUNT_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
 
   # Extract addresses with multiple call
-  F3_LOCKED_ADDRESSES=`echo "$F3_COUNT_LIST" | awk '$1 > '"$ADSCU_CONFIG_UNLOCK_NB_RETRY"`
+  F3_LOCKED_ADDRESSES=`echo "$F3_COUNT_LIST" | awk '$1 >= '"$ADSCU_CONFIG_UNLOCK_NB_RETRY"`
 
   # Remove these addresse
   F3_LOCKED_ADDRESSES=`echo "$F3_LOCKED_ADDRESSES" | cut -d ' ' -f2 | tr '\n' ' '`
@@ -226,9 +225,16 @@ logHook () {
         echo "$F1_UNLOCK_LIST" >> $ADSCU_CONFIG_DEBUG_OUT
       fi
 
+      # Remove space to be sure
+      F1_UNLOCK_LIST=`echo "$F1_UNLOCK_LIST" | tr -d " "`
+
       # Unlock these addresses
       if [ -n "$F1_UNLOCK_LIST" ]; then
-        pihole -b -d $F1_UNLOCK_LIST
+        pihole -b -d $F1_UNLOCK_LIST >> $ADSCU_CONFIG_DEBUG_OUT
+
+	# Clean history to avoid to try to remove it again
+	echo "Clean history (entry : [$F1_UNLOCK_LIST])" >> $ADSCU_CONFIG_DEBUG_OUT
+	F1_HISTORY=`cat "$F1_HISTORY" | sed "/$F1_UNLOCK_LIST/d"`
       fi
     fi
   fi
@@ -240,17 +246,21 @@ logHook () {
 ##############################################################################
 ### MAIN ###
 ##############################################################################
-echo "[`date`] ads-catcher-unlocker"
-echo "Debug mode enabled" > $ADSCU_CONFIG_DEBUG_OUT
+# Logfile path
+ADSCU_CONFIG_DEBUG_OUT=$(readSetting "unlocker_logfile")
+
+# Init
+echo "[`date`] ads-catcher-unlocker" > $ADSCU_CONFIG_DEBUG_OUT
+echo "Debug mode enabled" >> $ADSCU_CONFIG_DEBUG_OUT
 
 HISTORY_LIST=""
 LAST_DAY=0
 ADSCU_CONFIG_HISTORY_TIME_SEC=$(readSetting "unlocker_history_time_sec")
 ADSCU_CONFIG_UNLOCK_NB_RETRY=$(readSetting "unlocker_nb_retry")
 
-echo "Settings :"
-echo " - Nb retry     : $ADSCU_CONFIG_UNLOCK_NB_RETRY"
-echo " - History time : $ADSCU_CONFIG_HISTORY_TIME_SEC"
+echo "Settings :" >> $ADSCU_CONFIG_DEBUG_OUT
+echo " - Nb retry     : $ADSCU_CONFIG_UNLOCK_NB_RETRY" >> $ADSCU_CONFIG_DEBUG_OUT
+echo " - History time : $ADSCU_CONFIG_HISTORY_TIME_SEC" >> $ADSCU_CONFIG_DEBUG_OUT
 
 # Monitoring of pihole log
 tail -f /var/log/pihole.log | while read LINE
@@ -263,7 +273,7 @@ do
 
     # Clear history
     HISTORY_LIST=""
-    echo "New day, new history ($LAST_DAY / $TMP_DAY)" > $ADSCU_CONFIG_DEBUG_OUT
+    echo "New day, new log ($LAST_DAY / $TMP_DAY)" > $ADSCU_CONFIG_DEBUG_OUT
 
     # Save the date
     LAST_DAY=$TMP_DAY
